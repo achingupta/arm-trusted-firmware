@@ -205,7 +205,8 @@ static uint64_t mmap_desc(unsigned attr, unsigned long long addr_pa,
 	 */
 	desc |= (level == XLAT_TABLE_LEVEL_MAX) ? PAGE_DESC : BLOCK_DESC;
 	desc |= (attr & MT_NS) ? LOWER_ATTRS(NS) : 0;
-	desc |= (attr & MT_RW) ? LOWER_ATTRS(AP_RW) : LOWER_ATTRS(AP_RO);
+	desc |= (MT_DATA_AP_VAL(attr) == MT_RW) ?
+		LOWER_ATTRS(AP_RW) : LOWER_ATTRS(AP_RO);
 	desc |= LOWER_ATTRS(ACCESS_FLAG);
 
 	/*
@@ -230,7 +231,7 @@ static uint64_t mmap_desc(unsigned attr, unsigned long long addr_pa,
 		desc |= UPPER_ATTRS(XN);
 	} else { /* Normal memory */
 		/*
-		 * Always map read-write normal memory as execute-never.
+		 * Always map legacy read-write normal memory as execute-never.
 		 * (Trusted Firmware doesn't self-modify its code, therefore
 		 * R/W memory is reserved for data storage, which must not be
 		 * executable.)
@@ -240,10 +241,12 @@ static uint64_t mmap_desc(unsigned attr, unsigned long long addr_pa,
 		 * execute-never, regardless of the value of the XN bit in the
 		 * translation table.
 		 *
-		 * For read-only memory, rely on the MT_EXECUTE/MT_EXECUTE_NEVER
-		 * attribute to figure out the value of the XN bit.
+		 * For non-legacy RW and RO memory, rely on the
+		 * MT_EXECUTE/MT_EXECUTE_NEVER attribute to figure out the value
+		 * of the XN bit.
 		 */
-		if ((attr & MT_RW) || (attr & MT_EXECUTE_NEVER))
+		if ((MT_AP_VAL(attr) == MT_RW) ||
+		    (MT_CODE_AP_VAL(attr) == MT_EXECUTE_NEVER))
 			desc |= UPPER_ATTRS(XN);
 
 		if (mem_type == MT_MEMORY) {

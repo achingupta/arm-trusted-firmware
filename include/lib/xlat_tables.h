@@ -136,13 +136,64 @@
  */
 #define MT_TYPE_MASK	0x7
 #define MT_TYPE(_attr)	((_attr) & MT_TYPE_MASK)
-/* Access permissions (RO/RW) */
-#define MT_PERM_SHIFT	3
-/* Security state (SECURE/NS) */
-#define MT_SEC_SHIFT	4
-/* Access permissions for instruction execution (EXECUTE/EXECUTE_NEVER) */
-#define MT_EXECUTE_SHIFT	5
 
+/* Data Access permissions (RO/RW) */
+#define MT_DATA_AP_SHIFT	3
+#define MT_DATA_AP_MASK 	0x1
+#define MT_DATA_AP_VAL(_attr)	((_attr) & (MT_DATA_AP_MASK << 		\
+					    MT_DATA_AP_SHIFT))
+
+/*
+ * Access permissions for instruction execution (XN/NO_XN). Existing usages of
+ * MT_RW and MT_RO map to non-executable and executable attributes
+ * respectively. There are two bits to maintain this backwards compatibility.
+ * Bit[1] is used to enable the ability to specify instruction execution access
+ * permissions. Bit[0] when set enables the XN attribute and disables it
+ * otherwise. The bit combinations and their description are given below.
+ *
+ * ---------------------------------------------
+ * Bit[1]        Bit[0]        Description
+ * ---------------------------------------------
+ *   0             0           Ignored/Legacy
+ *   0             1           Ignored/Legacy
+ *   1             0           Unset XN flag
+ *   1             1           Set XN flag
+ *
+ */
+#define MT_CODE_AP_SHIFT	4
+#define MT_CODE_AP_MASK		0x3
+#define MT_CODE_AP_VAL(_attr)	((_attr) & (MT_CODE_AP_MASK << 		\
+					    MT_CODE_AP_SHIFT))
+
+/*
+ * Macros to retrieve aggregate permission value by ORing the shifted code and
+ * data access permission values. The following table illustrates the aggregate
+ * values and their meanings.
+ *
+ * RO = 0b'0000     (0 << MT_DATA_AP_SHIFT)
+ * RW = 0b'1000     (1 << MT_DATA_AP_SHIFT)
+ * X  = 0b'00100000 (0x2 << MT_CODE_AP_SHIFT)
+ * XN = 0b'00110000 (0x3 << MT_CODE_AP_SHIFT)
+ *
+ * -------------------------------------------------------------------------
+ * CODE AP        DATA AP        AGGR. VAL.        Description
+ * -------------------------------------------------------------------------
+ * 0x0            0x0            0x0               Legacy MT_RO. XN is unset
+ * 0x0            0x8            0x8               Legacy MT_RW. XN is set
+ * 0x10           0x0            0x10              Not applicable
+ * 0x10           0x8            0x18              Not applicable
+ * 0x20           0x0            0x20              MT_RO + MT_EXECUTE
+ * 0x20           0x8            0x28              MT_RW + MT_EXECUTE
+ * 0x30           0x0            0x30              MT_RO + MT_EXECUTE_NEVER
+ * 0x30           0x8            0x38              MT_RW + MT_EXECUTE_NEVER
+
+ */
+#define MT_AP_MASK		((MT_CODE_AP_MASK << MT_CODE_AP_SHIFT) |\
+				 (MT_DATA_AP_MASK << MT_DATA_AP_SHIFT))
+#define MT_AP_VAL(_attr)	((_attr) & MT_AP_MASK)
+
+/* Security state (SECURE/NS) */
+#define MT_SEC_SHIFT		6
 /*
  * Memory mapping attributes
  */
@@ -158,21 +209,22 @@ typedef enum  {
 	MT_MEMORY,
 	/* Values up to 7 are reserved to add new memory types in the future */
 
-	MT_RO		= 0 << MT_PERM_SHIFT,
-	MT_RW		= 1 << MT_PERM_SHIFT,
+	MT_RO		= 0 << MT_DATA_AP_SHIFT,
+	MT_RW		= 1 << MT_DATA_AP_SHIFT,
 
 	MT_SECURE	= 0 << MT_SEC_SHIFT,
 	MT_NS		= 1 << MT_SEC_SHIFT,
 
 	/*
 	 * Access permissions for instruction execution are only relevant for
-	 * normal read-only memory, i.e. MT_MEMORY | MT_RO. They are ignored
-	 * (and potentially overridden) otherwise:
+	 * normal memory, i.e. MT_MEMORY | MT_RO/MT_RW. They are ignored
+	 * (and potentially overridden) in the following case:
 	 *  - Device memory is always marked as execute-never.
-	 *  - Read-write normal memory is always marked as execute-never.
+	 *  - Legacy Read-write normal memory is always marked as execute-never.
+	 *  - Legacy Read-only normal memory is always marked as executable.
 	 */
-	MT_EXECUTE		= 0 << MT_EXECUTE_SHIFT,
-	MT_EXECUTE_NEVER	= 1 << MT_EXECUTE_SHIFT,
+	MT_EXECUTE		= 2 << MT_CODE_AP_SHIFT,
+	MT_EXECUTE_NEVER	= 3 << MT_CODE_AP_SHIFT,
 } mmap_attr_t;
 
 #define MT_CODE		(MT_MEMORY | MT_RO | MT_EXECUTE)
