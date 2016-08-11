@@ -211,3 +211,47 @@ DEFINE_ENABLE_MMU_EL(1,
 DEFINE_ENABLE_MMU_EL(3,
 		TCR_EL3_RES1 | (tcr_ps_bits << TCR_EL3_PS_SHIFT),
 		tlbialle3)
+
+#define DEFINE_PREPARE_MMU_CONTEXT_EL(_el, _tcr_extra, _tlbi_fct)	\
+	void prepare_mmu_context_el##_el(uint64_t *l1_xlation_table,	\
+					 uint64_t *mair,		\
+					 uint64_t *tcr,			\
+					 uint64_t *ttbr,		\
+					 uint32_t *sctlr,		\
+					 unsigned int flags)		\
+	{								\
+		assert(mair && tcr && ttbr && 				\
+		       sctlr && l1_xlation_table);			\
+									\
+		/* Set attributes in the right indices of the MAIR */	\
+		*mair = MAIR_ATTR_SET(ATTR_DEVICE, ATTR_DEVICE_INDEX);	\
+		*mair |= MAIR_ATTR_SET(ATTR_IWBWA_OWBWA_NTR,		\
+				       ATTR_IWBWA_OWBWA_NTR_INDEX);	\
+		*mair |= MAIR_ATTR_SET(ATTR_NON_CACHEABLE,		\
+				       ATTR_NON_CACHEABLE_INDEX);	\
+									\
+		/* Invalidate TLBs at the current exception level */	\
+		_tlbi_fct();						\
+									\
+		/* Set TCR bits as well. */				\
+		/* Inner & outer WBWA & shareable + T0SZ = 32 */	\
+		*tcr = TCR_SH_INNER_SHAREABLE | TCR_RGN_OUTER_WBA |	\
+			TCR_RGN_INNER_WBA |				\
+			(64 - __builtin_ctzl(ADDR_SPACE_SIZE));		\
+		*tcr |= _tcr_extra;					\
+									\
+		/* Set TTBR bits as well */				\
+		*ttbr = (uint64_t) l1_xlation_table;			\
+									\
+		*sctlr = SCTLR_EL1_RES1;				\
+		*sctlr |= SCTLR_M_BIT;					\
+									\
+		if (flags & DISABLE_DCACHE)				\
+			*sctlr &= ~SCTLR_C_BIT;				\
+		else							\
+			*sctlr |= SCTLR_C_BIT;				\
+	}
+
+DEFINE_PREPARE_MMU_CONTEXT_EL(1,
+			      (tcr_ps_bits << TCR_EL1_IPS_SHIFT),
+			      tlbivmalle1)

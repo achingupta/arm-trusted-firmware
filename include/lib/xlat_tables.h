@@ -264,5 +264,12 @@ void enable_mmu_el1(unsigned int flags);
 void enable_mmu_el3(unsigned int flags);
 #endif /* AARCH32 */
 
+void prepare_mmu_context_el1(uint64_t     *l1_xlation_table,
+			     uint64_t     *mair,
+			     uint64_t     *tcr,
+			     uint64_t     *ttbr,
+			     uint32_t     *sctlr,
+			     unsigned int flags);
+
 #endif /*__ASSEMBLY__*/
 #endif /* __XLAT_TABLES_H__ */
