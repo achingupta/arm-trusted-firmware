@@ -130,6 +130,16 @@ void init_xlat_tables(void)
 	assert(max_va < ADDR_SPACE_SIZE);
 }
 
+void create_xlat_tables(uint64_t *l1_table, uint64_t other_tables[][XLAT_TABLE_ENTRIES])
+{
+	unsigned long long max_pa;
+	uintptr_t max_va;
+	print_mmap();
+	init_xlation_tables(0, l1_table, other_tables, 1, &max_va, &max_pa);
+	tcr_ps_bits = calc_physical_addr_size_bits(max_pa);
+	assert(max_va < ADDR_SPACE_SIZE);
+}
+
 /*******************************************************************************
  * Macro generating the code for the function enabling the MMU in the given
  * exception level, assuming that the pagetables have already been created.

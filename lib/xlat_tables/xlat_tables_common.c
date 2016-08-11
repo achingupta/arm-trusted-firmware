@@ -84,10 +84,13 @@ void print_mmap(void)
 #endif
 }
 
-void mmap_add_region(unsigned long long base_pa, uintptr_t base_va,
-			size_t size, unsigned int attr)
+/* HACK/TODO */
+static void mmap_add_region_in_mmap(mmap_region_t *mm,
+				    unsigned long long base_pa,
+				    uintptr_t base_va,
+				    size_t size,
+				    unsigned int attr)
 {
-	mmap_region_t *mm = mmap;
 	mmap_region_t *mm_last = mm + ARRAY_SIZE(mmap) - 1;
 	unsigned long long end_pa = base_pa + size - 1;
 	uintptr_t end_va = base_va + size - 1;
@@ -184,12 +187,27 @@ void mmap_add_region(unsigned long long base_pa, uintptr_t base_va,
 		xlat_max_va = end_va;
 }
 
+void mmap_add_region(unsigned long long base_pa, uintptr_t base_va,
+		     size_t size, unsigned int attr)
+{
+	mmap_add_region_in_mmap(mmap, base_pa, base_va, size, attr);
+}
+
 void mmap_add(const mmap_region_t *mm)
 {
 	while (mm->size) {
 		mmap_add_region(mm->base_pa, mm->base_va, mm->size, mm->attr);
 		++mm;
 	}
+}
+
+/* HACK/TODO */
+void mmap_reset(void)
+{
+	memset(mmap, 0, sizeof(mmap));
+	xlat_max_va = 0;
+	xlat_max_pa = 0;
+	next_xlat = 0;
 }
 
 static uint64_t mmap_desc(unsigned attr, unsigned long long addr_pa,
@@ -336,9 +354,11 @@ static int mmap_region_attr(mmap_region_t *mm, uintptr_t base_va,
 	}
 }
 
-static mmap_region_t *init_xlation_table_inner(mmap_region_t *mm,
+/* HACK/TODO */
+mmap_region_t *init_xlation_table_inner(mmap_region_t *mm,
 					uintptr_t base_va,
 					uint64_t *table,
+					uint64_t xlat_tables[][XLAT_TABLE_ENTRIES],
 					int level)
 {
 	assert(level >= XLAT_TABLE_LEVEL_MIN && level <= XLAT_TABLE_LEVEL_MAX);
@@ -390,8 +410,11 @@ static mmap_region_t *init_xlation_table_inner(mmap_region_t *mm,
 			desc = TABLE_DESC | (uintptr_t)new_table;
 
 			/* Recurse to fill in new table */
-			mm = init_xlation_table_inner(mm, base_va,
-						new_table, level+1);
+			mm = init_xlation_table_inner(mm,
+						      base_va,
+						      new_table,
+						      xlat_tables,
+						      level+1);
 		}
 
 		debug_print("\n");
@@ -403,12 +426,27 @@ static mmap_region_t *init_xlation_table_inner(mmap_region_t *mm,
 	return mm;
 }
 
+/* HACK/TODO */
+void init_xlation_tables(uintptr_t base_va,
+			 uint64_t *l1_table,
+			 uint64_t xlat_tables[][XLAT_TABLE_ENTRIES],
+			 int level,
+			 uintptr_t *max_va,
+			 unsigned long long *max_pa)
+{
+	init_xlation_table_inner(mmap, base_va, l1_table, xlat_tables, level);
+	*max_va = xlat_max_va;
+	*max_pa = xlat_max_pa;
+}
+
 void init_xlation_table(uintptr_t base_va, uint64_t *table,
 			int level, uintptr_t *max_va,
 			unsigned long long *max_pa)
 {
-
-	init_xlation_table_inner(mmap, base_va, table, level);
-	*max_va = xlat_max_va;
-	*max_pa = xlat_max_pa;
+	init_xlation_tables(base_va,
+			    table,
+			    xlat_tables,
+			    level,
+			    max_va,
+			    max_pa);
 }

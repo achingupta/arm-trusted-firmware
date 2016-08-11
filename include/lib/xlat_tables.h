@@ -246,9 +246,14 @@ typedef struct mmap_region {
 
 /* Generic translation table APIs */
 void init_xlat_tables(void);
-void mmap_add_region(unsigned long long base_pa, uintptr_t base_va,
-				size_t size, unsigned int attr);
+void create_xlat_tables(uint64_t *l1_table,
+			uint64_t other_tables[][XLAT_TABLE_ENTRIES]);
+void mmap_add_region(unsigned long long base_pa,
+		     uintptr_t base_va,
+		     size_t size,
+		     unsigned int attr);
 void mmap_add(const mmap_region_t *mm);
+void mmap_reset(void);
 
 #ifdef AARCH32
 /* AArch32 specific translation table API */

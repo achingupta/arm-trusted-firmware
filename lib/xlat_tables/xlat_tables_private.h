@@ -41,5 +41,10 @@ void print_mmap(void);
 void init_xlation_table(uintptr_t base_va, uint64_t *table,
 			int level, uintptr_t *max_va,
 			unsigned long long *max_pa);
-
+void init_xlation_tables(uintptr_t base_va,
+			 uint64_t *l1_table,
+			 uint64_t xlat_tables[][XLAT_TABLE_ENTRIES],
+			 int level,
+			 uintptr_t *max_va,
+			 unsigned long long *max_pa);
 #endif /* __XLAT_TABLES_PRIVATE_H__ */
