@@ -157,10 +157,12 @@
 #define SCTLR_SA_BIT		(1 << 3)
 #define SCTLR_CP15BEN_BIT	(1 << 5)
 #define SCTLR_I_BIT		(1 << 12)
+#define SCTLR_UCT_BIT		(1 << 15)
 #define SCTLR_NTWI_BIT		(1 << 16)
 #define SCTLR_NTWE_BIT		(1 << 18)
 #define SCTLR_WXN_BIT		(1 << 19)
 #define SCTLR_EE_BIT		(1 << 25)
+#define SCTLR_UCI_BIT		(1 << 26)
 
 /* CPACR_El1 definitions */
 #define CPACR_EL1_FPEN(x)	(x << 20)

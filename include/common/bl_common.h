@@ -98,6 +98,18 @@
 #define EP_GET_FIRST_EXE(x) ((x) & EP_FIRST_EXE_MASK)
 #define EP_SET_FIRST_EXE(x, ee) ((x) = ((x) & ~EP_FIRST_EXE_MASK) | (ee))
 
+#define EP_UCME_MASK		0x10
+#define EP_UCME_ENABLE		0x10
+#define EP_UCME_DISABLE		0x0
+#define EP_GET_UCME(x)		(x & EP_UCME_MASK)
+#define EP_SET_UCME(x, ucme)	((x) = ((x) & ~EP_UCME_MASK) | (ucme))
+
+#define EP_UFPE_MASK		0x20
+#define EP_UFPE_ENABLE		0x20
+#define EP_UFPE_DISABLE		0x0
+#define EP_GET_UFPE(x)		(x & EP_UFPE_MASK)
+#define EP_SET_UFPE(x, ufpe) 	((x) = ((x) & ~EP_UFPE_MASK) | (ufpe))
+
 #define PARAM_EP		0x01
 #define PARAM_IMAGE_BINARY	0x02
 #define PARAM_BL31		0x03
