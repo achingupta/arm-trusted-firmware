@@ -38,6 +38,7 @@
 #include <mmio.h>
 #include <plat_arm.h>
 #include <platform.h>
+#include <xlat_tables.h>
 
 #define BL31_END (uintptr_t)(&__BL31_END__)
 
@@ -339,6 +340,23 @@ void plat_prepare_mmu_context_el1(uint64_t *mair,
  ******************************************************************************/
 void arm_bl31_plat_arch_setup(void)
 {
+#if AP_BL3_SFS_PAYLOAD0_BASE
+	int ret;
+
+	ret = plat_alloc_sel1_xlation_table_mem(MM_STUB_SEC_MEM_BASE,
+						MM_STUB_SEC_MEM_SIZE,
+						bl32_image_info.image_base,
+						bl32_image_info.image_size,
+						&l1_xlation_table,
+						&xlat_tables);
+	if (ret)
+		panic();
+
+	/* Initialise page tables for S-EL1 */
+	mmap_add(plat_get_mmap(BL32_IMAGE_ID));
+	create_xlat_tables(l1_xlation_table, (uint64_t (*)[512]) xlat_tables);
+	mmap_reset();
+#endif
 	arm_setup_page_tables(BL31_BASE,
 			      BL31_END - BL31_BASE,
 			      BL_CODE_BASE,
