@@ -35,6 +35,7 @@
 #include <gicv2.h>
 #include <mmio.h>
 #include <plat_arm.h>
+#include <tbbr_img_def.h>
 #include <v2m_def.h>
 #include "../fvp_def.h"
 
@@ -123,6 +124,19 @@ const mmap_region_t plat_arm_mmap[] = {
 	MAP_DEVICE1,
 	{0}
 };
+
+/* S-EL1 page tables will be initialised in EL3 */
+#if AP_BL3_SFS_PAYLOAD0_BASE
+const mmap_region_t plat_arm_mm_mmap[] = {
+	V2M_MAP_IOFPGA,
+	MAP_DEVICE0,
+	MAP_DEVICE1,
+	ARM_MAP_SECURE_NS_DRAM,
+	ARM_MAP_SFS_PAYLOAD0_MEM,
+	ARM_MAP_MM_STUB_SEC_MEM,	/* TODO: Mark this memory as RO */
+	{0}
+};
+#endif
 #endif
 #if IMAGE_BL32
 const mmap_region_t plat_arm_mmap[] = {
@@ -248,4 +262,15 @@ void fvp_interconnect_disable(void)
 {
 	if (arm_config.flags & ARM_CONFIG_HAS_INTERCONNECT)
 		plat_arm_interconnect_exit_coherency();
+}
+
+/* HACK/TODO */
+const mmap_region_t *plat_get_mmap(unsigned int image_id)
+{
+#if AP_BL3_SFS_PAYLOAD0_BASE && IMAGE_BL31
+	if (image_id == BL32_IMAGE_ID)
+		return plat_arm_mm_mmap;
+#endif
+
+	return plat_arm_mmap;
 }

@@ -310,6 +310,14 @@ void plat_flush_next_bl_params(void);
 
 #endif /* LOAD_IMAGE_V2 */
 
+/*******************************************************************************
+ * Page tables related function
+ ******************************************************************************/
+const mmap_region_t *plat_get_mmap(unsigned int image_id);
+void plat_prepare_mmu_context_el1(uint64_t *mair,
+				  uint64_t *tcr,
+				  uint64_t *ttbr,
+				  uint32_t *sctlr);
 #if ENABLE_PLAT_COMPAT
 /*
  * The below declarations are to enable compatibility for the platform ports

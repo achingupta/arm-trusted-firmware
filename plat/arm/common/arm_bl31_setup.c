@@ -277,6 +277,60 @@ void bl31_plat_runtime_setup(void)
 	arm_bl31_plat_runtime_setup();
 }
 
+#if AP_BL3_SFS_PAYLOAD0_BASE
+static 	uint64_t *l1_xlation_table;
+static uintptr_t xlat_tables;
+
+#define NUM_L1_ENTRIES          (ADDR_SPACE_SIZE >> L1_XLAT_ADDRESS_SHIFT)
+#define __ALIGN_MASK(x, mask)    (((x) + (mask)) & ~(mask))
+#define ALIGN(x,a)              __ALIGN_MASK(x, (__typeof__(x))(a) - 1)
+
+int plat_alloc_sel1_xlation_table_mem(uint64_t total_base, size_t total_size,
+				      uint64_t image_base, size_t image_size,
+				      uint64_t **l1_table,
+				      uintptr_t *lx_tables)
+{
+	uint64_t free_base, l1_aligned_base, lx_aligned_base;
+	size_t l1_size, lx_size;
+
+	/* TODO: assume for the time being that image_base == BL32_BASE */
+	assert (total_base == image_base);
+
+	/* Calculate the amount of free space left in BL32 memory */
+	free_base = image_base + image_size;
+
+	l1_size = NUM_L1_ENTRIES * sizeof(uint64_t);
+	lx_size = MAX_XLAT_TABLES * XLAT_TABLE_ENTRIES * sizeof(uint64_t);
+
+	l1_aligned_base = ALIGN(free_base, l1_size);
+	if (l1_aligned_base + l1_size > total_base + total_size)
+		return -ENOMEM;
+
+	lx_aligned_base = ALIGN(l1_aligned_base + l1_size, XLAT_TABLE_SIZE);
+	if (lx_aligned_base + lx_size > total_base + total_size)
+		return -ENOMEM;
+
+	*l1_table = (uint64_t *) l1_aligned_base;
+	*lx_tables = (uintptr_t) lx_aligned_base;
+
+	INFO("BL31: BL32 free base=%p\n", (void *) free_base);
+	INFO("BL31: BL32 l1 base=%p\n", (void *) l1_aligned_base);
+	INFO("BL31: BL32 l1 end=%p\n", (void *) (l1_aligned_base + l1_size));
+	INFO("BL31: BL32 lx base=%p\n", (void *) lx_aligned_base);
+	INFO("BL31: BL32 lx end=%p\n", (void *) (lx_aligned_base + lx_size));
+	INFO("BL31: BL32 free end=%10p\n", (void *) (total_base + total_size));
+
+	return 0;
+}
+
+void plat_prepare_mmu_context_el1(uint64_t *mair,
+				  uint64_t *tcr,
+				  uint64_t *ttbr,
+				  uint32_t *sctlr)
+{
+	prepare_mmu_context_el1(l1_xlation_table, mair, tcr, ttbr, sctlr, 0);
+}
+#endif
 /*******************************************************************************
  * Perform the very early platform specific architectural setup shared between
  * ARM standard platforms. This only does basic initialization. Later
