@@ -100,6 +100,8 @@
  */
 #define AP_RO			(0x1 << 5)
 #define AP_RW			(0x0 << 5)
+#define AP_EL0_R0		(0x3 << 4)
+#define AP_EL0_RW		(0x1 << 4)
 
 #define NS				(0x1 << 3)
 #define ATTR_NON_CACHEABLE_INDEX	0x2
@@ -139,7 +141,7 @@
 
 /* Data Access permissions (RO/RW) */
 #define MT_DATA_AP_SHIFT	3
-#define MT_DATA_AP_MASK 	0x1
+#define MT_DATA_AP_MASK 	0x3
 #define MT_DATA_AP_VAL(_attr)	((_attr) & (MT_DATA_AP_MASK << 		\
 					    MT_DATA_AP_SHIFT))
 
@@ -160,7 +162,7 @@
  *   1             1           Set XN flag
  *
  */
-#define MT_CODE_AP_SHIFT	4
+#define MT_CODE_AP_SHIFT	5
 #define MT_CODE_AP_MASK		0x3
 #define MT_CODE_AP_VAL(_attr)	((_attr) & (MT_CODE_AP_MASK << 		\
 					    MT_CODE_AP_SHIFT))
@@ -193,7 +195,7 @@
 #define MT_AP_VAL(_attr)	((_attr) & MT_AP_MASK)
 
 /* Security state (SECURE/NS) */
-#define MT_SEC_SHIFT		6
+#define MT_SEC_SHIFT		7
 /*
  * Memory mapping attributes
  */
@@ -211,6 +213,8 @@ typedef enum  {
 
 	MT_RO		= 0 << MT_DATA_AP_SHIFT,
 	MT_RW		= 1 << MT_DATA_AP_SHIFT,
+	MT_EL0_RO	= 2 << MT_DATA_AP_SHIFT,
+	MT_EL0_RW	= 3 << MT_DATA_AP_SHIFT,
 
 	MT_SECURE	= 0 << MT_SEC_SHIFT,
 	MT_NS		= 1 << MT_SEC_SHIFT,

@@ -205,8 +205,30 @@ static uint64_t mmap_desc(unsigned attr, unsigned long long addr_pa,
 	 */
 	desc |= (level == XLAT_TABLE_LEVEL_MAX) ? PAGE_DESC : BLOCK_DESC;
 	desc |= (attr & MT_NS) ? LOWER_ATTRS(NS) : 0;
-	desc |= (MT_DATA_AP_VAL(attr) == MT_RW) ?
-		LOWER_ATTRS(AP_RW) : LOWER_ATTRS(AP_RO);
+
+	/* 
+	 * Examine the data access permissions and mark unprivileged pages as
+	 * PXN always.
+	 */
+	switch (MT_DATA_AP_VAL(attr)) {
+	case MT_RO:
+		desc |= LOWER_ATTRS(AP_RO);
+		break;
+	case MT_RW:
+		desc |= LOWER_ATTRS(AP_RW);
+		break;
+	case MT_EL0_RO:
+		desc |= LOWER_ATTRS(AP_EL0_R0);
+		desc |= UPPER_ATTRS(PXN);
+		break;
+	case MT_EL0_RW:
+		desc |= LOWER_ATTRS(AP_EL0_RW);
+		desc |= UPPER_ATTRS(PXN);
+		break;
+	default:
+		assert(0);
+	}
+
 	desc |= LOWER_ATTRS(ACCESS_FLAG);
 
 	/*
@@ -245,7 +267,8 @@ static uint64_t mmap_desc(unsigned attr, unsigned long long addr_pa,
 		 * MT_EXECUTE/MT_EXECUTE_NEVER attribute to figure out the value
 		 * of the XN bit.
 		 */
-		if ((MT_AP_VAL(attr) == MT_RW) ||
+		if ((MT_AP_VAL(attr) == MT_RW) || 
+		    (MT_AP_VAL(attr) == MT_EL0_RW) ||
 		    (MT_CODE_AP_VAL(attr) == MT_EXECUTE_NEVER))
 			desc |= UPPER_ATTRS(XN);
 
