@@ -160,10 +160,17 @@
 						ARM_NS_DRAM1_SIZE,	\
 						MT_MEMORY | MT_RW | MT_NS)
 
+#ifdef SFSD_mmd
+#define ARM_MAP_MM_STUB_SEC_MEM		MAP_REGION_FLAT(		\
+						MM_STUB_SEC_MEM_BASE,	\
+						MM_STUB_SEC_MEM_SIZE,	\
+						MT_MEMORY | MT_RW | MT_SECURE)
+#else
 #define ARM_MAP_TSP_SEC_MEM		MAP_REGION_FLAT(		\
 						TSP_SEC_MEM_BASE,	\
 						TSP_SEC_MEM_SIZE,	\
 						MT_MEMORY | MT_RW | MT_SECURE)
+#endif /* SFSD_mmd */
 
 #if ARM_BL31_IN_DRAM
 #define ARM_MAP_BL31_SEC_DRAM		MAP_REGION_FLAT(		\
@@ -312,6 +319,16 @@
 # define BL32_LIMIT			(PLAT_ARM_TRUSTED_DRAM_BASE	\
 						+ (1 << 21))
 #elif ARM_TSP_RAM_LOCATION_ID == ARM_DRAM_ID
+
+/* Define the extents of the memory reserved for the SFS payload */
+#ifdef SFSD_mmd
+# define MM_STUB_SEC_MEM_SIZE		0x200000		/* 2MB */
+# define MM_STUB_SEC_MEM_BASE		(ARM_AP_TZC_DRAM1_BASE +	\
+					 ARM_AP_TZC_DRAM1_SIZE -	\
+					 MM_STUB_SEC_MEM_SIZE)
+# define BL32_BASE			MM_STUB_SEC_MEM_BASE
+# define BL32_LIMIT			(MM_STUB_SEC_MEM_BASE + MM_STUB_SEC_MEM_SIZE)
+#else
 # define TSP_SEC_MEM_BASE		ARM_AP_TZC_DRAM1_BASE
 # define TSP_SEC_MEM_SIZE		ARM_AP_TZC_DRAM1_SIZE
 # define BL32_BASE			ARM_AP_TZC_DRAM1_BASE
@@ -323,9 +340,11 @@
 
 /* BL32 is mandatory in AArch32 */
 #ifndef AARCH32
+#ifndef SFSD_mmd
 #ifdef SPD_none
 #undef BL32_BASE
 #endif /* SPD_none */
+#endif /* SFSD_mmd */
 #endif
 
 /*******************************************************************************

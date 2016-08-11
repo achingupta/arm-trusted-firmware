@@ -347,10 +347,17 @@ void bl2_plat_get_bl32_meminfo(meminfo_t *bl32_meminfo)
 	 */
 	bl32_meminfo->total_base = BL32_BASE;
 	bl32_meminfo->free_base = BL32_BASE;
+#ifdef SFSD_mmd
+	bl32_meminfo->total_size =
+		(MM_STUB_SEC_MEM_BASE + MM_STUB_SEC_MEM_SIZE) - BL32_BASE;
+	bl32_meminfo->free_size =
+		(MM_STUB_SEC_MEM_BASE + MM_STUB_SEC_MEM_SIZE) - BL32_BASE;
+#else
 	bl32_meminfo->total_size =
 			(TSP_SEC_MEM_BASE + TSP_SEC_MEM_SIZE) - BL32_BASE;
 	bl32_meminfo->free_size =
 			(TSP_SEC_MEM_BASE + TSP_SEC_MEM_SIZE) - BL32_BASE;
+#endif /* SFSD_mmd */
 }
 #endif /* BL32_BASE */
 
