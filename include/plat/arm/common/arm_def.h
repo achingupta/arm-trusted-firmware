@@ -165,6 +165,15 @@
 						MM_STUB_SEC_MEM_BASE,	\
 						MM_STUB_SEC_MEM_SIZE,	\
 						MT_MEMORY | MT_RW | MT_SECURE)
+/*
+ * HACK: This will give S-EL0 access to payload memory even in BL2. We do not
+ * care since S-EL0 will not be entered while in BL2.
+ */
+#define ARM_MAP_SFS_PAYLOAD0_MEM		MAP_REGION_FLAT(		\
+						AP_BL3_SFS_PAYLOAD0_BASE,	\
+						AP_BL3_SFS_PAYLOAD0_SIZE,	\
+						MT_MEMORY | MT_EL0_RW |		\
+						MT_EXECUTE | MT_SECURE)
 #else
 #define ARM_MAP_TSP_SEC_MEM		MAP_REGION_FLAT(		\
 						TSP_SEC_MEM_BASE,	\
@@ -323,6 +332,9 @@
 /* Define the extents of the memory reserved for the SFS payload */
 #ifdef SFSD_mmd
 # define MM_STUB_SEC_MEM_SIZE		0x200000		/* 2MB */
+# define AP_BL3_SFS_PAYLOAD0_BASE	ARM_AP_TZC_DRAM1_BASE
+# define AP_BL3_SFS_PAYLOAD0_SIZE	(ARM_AP_TZC_DRAM1_SIZE -	\
+					 MM_STUB_SEC_MEM_SIZE)
 # define MM_STUB_SEC_MEM_BASE		(ARM_AP_TZC_DRAM1_BASE +	\
 					 ARM_AP_TZC_DRAM1_SIZE -	\
 					 MM_STUB_SEC_MEM_SIZE)
@@ -334,6 +346,7 @@
 # define BL32_BASE			ARM_AP_TZC_DRAM1_BASE
 # define BL32_LIMIT			(ARM_AP_TZC_DRAM1_BASE +	\
 						ARM_AP_TZC_DRAM1_SIZE)
+#endif /* SFSD_mmd */
 #else
 # error "Unsupported ARM_TSP_RAM_LOCATION_ID value"
 #endif

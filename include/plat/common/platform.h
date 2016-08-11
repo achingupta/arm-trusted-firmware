@@ -208,6 +208,16 @@ void bl2_plat_get_bl32_meminfo(struct meminfo *mem_info);
 #endif /* LOAD_IMAGE_V2 */
 
 /*******************************************************************************
+ * Conditionally mandatory BL2 functions: must be implemented if SFS payloads
+ * are supported
+ ******************************************************************************/
+void bl2_plat_set_sfs_payload_ep_info(struct image_info *image,
+			       struct entry_point_info *ep);
+
+/* Gets the memory layout for SFS_PAYLOAD */
+void bl2_plat_get_sfs_payload_meminfo(struct meminfo *mem_info);
+
+/*******************************************************************************
  * Optional BL2 functions (may be overridden)
  ******************************************************************************/
 

@@ -167,6 +167,39 @@ static int load_bl32(bl31_params_t *bl2_to_bl31_params)
 	return e;
 }
 
+/*******************************************************************************
+ * Load the SFS payload image if there's one.
+ * The bl2_to_bl31_params param will be updated with the relevant payload
+ * information.
+ * Return 0 on success or if there's no image to load, a negative error
+ * code otherwise.
+ ******************************************************************************/
+static int load_ap_bl3_sfs_payload(bl31_params_t *bl2_to_bl31_params)
+{
+	int e = 0;
+#ifdef AP_BL3_SFS_PAYLOAD0_BASE
+	meminfo_t sfs_payload_meminfo;
+
+	INFO("BL2: Loading AP_BL3_SFS_PAYLOAD0\n");
+	assert(bl2_to_bl31_params != NULL);
+
+	/* Load the SFS MM payload as well */
+	bl2_plat_get_sfs_payload_meminfo(&sfs_payload_meminfo);
+	e = load_image(&sfs_payload_meminfo,
+		       AP_BL3_SFS_PAYLOAD0_ID,
+		       AP_BL3_SFS_PAYLOAD0_BASE,
+		       bl2_to_bl31_params->sfs_payload_image_info,
+		       bl2_to_bl31_params->sfs_payload_ep_info);
+	if (e)
+		return e;
+
+	bl2_plat_set_sfs_payload_ep_info(
+		bl2_to_bl31_params->sfs_payload_image_info,
+		bl2_to_bl31_params->sfs_payload_ep_info);
+#endif /* AP_BL3_SFS_PAYLOAD0_BASE */
+	return e;
+}
+
 #ifndef PRELOADED_BL33_BASE
 /*******************************************************************************
  * Load the BL33 image.
@@ -257,6 +290,16 @@ entry_point_info_t *bl2_load_images(void)
 			plat_error_handler(e);
 		} else {
 			WARN("Failed to load BL32 (%i)\n", e);
+		}
+	}
+
+	e = load_ap_bl3_sfs_payload(bl2_to_bl31_params);
+	if (e) {
+		if (e == -EAUTH) {
+			ERROR("Failed to authenticate AP_BL3_SFS_PAYLOAD0\n");
+			plat_error_handler(e);
+		} else {
+			WARN("Failed to load AP_BL3_SFS_PAYLOAD0 (%i)\n", e);
 		}
 	}
 

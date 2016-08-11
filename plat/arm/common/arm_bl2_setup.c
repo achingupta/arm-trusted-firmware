@@ -76,6 +76,10 @@ typedef struct bl2_to_bl31_params_mem {
 	image_info_t bl31_image_info;
 	image_info_t bl32_image_info;
 	image_info_t bl33_image_info;
+#if AP_BL3_SFS_PAYLOAD0_BASE
+	image_info_t sfs_payload_image_info;
+	entry_point_info_t sfs_payload_ep_info;
+#endif
 	entry_point_info_t bl33_ep_info;
 	entry_point_info_t bl32_ep_info;
 	entry_point_info_t bl31_ep_info;
@@ -92,9 +96,11 @@ static bl2_to_bl31_params_mem_t bl31_params_mem;
 #pragma weak bl2_plat_set_bl31_ep_info
 #pragma weak bl2_plat_get_scp_bl2_meminfo
 #pragma weak bl2_plat_get_bl32_meminfo
+#pragma weak bl2_plat_get_sfs_payload_meminfo
 #pragma weak bl2_plat_set_bl32_ep_info
 #pragma weak bl2_plat_get_bl33_meminfo
 #pragma weak bl2_plat_set_bl33_ep_info
+#pragma weak bl2_plat_set_sfs_payload_ep_info
 
 #if ARM_BL31_IN_DRAM
 meminfo_t *bl2_plat_sec_mem_layout(void)
@@ -154,6 +160,21 @@ bl31_params_t *bl2_plat_get_bl31_params(void)
 	bl2_to_bl31_params->bl32_image_info = &bl31_params_mem.bl32_image_info;
 	SET_PARAM_HEAD(bl2_to_bl31_params->bl32_image_info, PARAM_IMAGE_BINARY,
 		VERSION_1, 0);
+#if AP_BL3_SFS_PAYLOAD0_BASE
+	bl2_to_bl31_params->sfs_payload_ep_info =
+		&bl31_params_mem.sfs_payload_ep_info;
+	SET_PARAM_HEAD(bl2_to_bl31_params->sfs_payload_ep_info,
+		       PARAM_EP,
+		       VERSION_1,
+		       0);
+
+	bl2_to_bl31_params->sfs_payload_image_info =
+		&bl31_params_mem.sfs_payload_image_info;
+	SET_PARAM_HEAD(bl2_to_bl31_params->sfs_payload_image_info,
+		       PARAM_IMAGE_BINARY,
+		       VERSION_1,
+		       0);
+#endif
 #endif /* BL32_BASE */
 
 	/* Fill BL33 related information */
@@ -359,6 +380,28 @@ void bl2_plat_get_bl32_meminfo(meminfo_t *bl32_meminfo)
 			(TSP_SEC_MEM_BASE + TSP_SEC_MEM_SIZE) - BL32_BASE;
 #endif /* SFSD_mmd */
 }
+
+#if AP_BL3_SFS_PAYLOAD0_BASE
+void bl2_plat_set_sfs_payload_ep_info(image_info_t *sfs_payload_image_info,
+				      entry_point_info_t *sfs_payload_ep_info)
+{
+	SET_SECURITY_STATE(sfs_payload_ep_info->h.attr, SECURE);
+	sfs_payload_ep_info->spsr = SPSR_64(MODE_EL0,
+					    MODE_SP_EL0,
+					    DISABLE_ALL_EXCEPTIONS);
+}
+
+/*******************************************************************************
+ * Populate the extents of memory available for the SFS MM Payload
+ ******************************************************************************/
+void bl2_plat_get_sfs_payload_meminfo(meminfo_t *sfs_payload_meminfo)
+{
+	sfs_payload_meminfo->total_base = AP_BL3_SFS_PAYLOAD0_BASE;
+	sfs_payload_meminfo->free_base = AP_BL3_SFS_PAYLOAD0_BASE;
+	sfs_payload_meminfo->total_size = AP_BL3_SFS_PAYLOAD0_SIZE;
+	sfs_payload_meminfo->free_size = AP_BL3_SFS_PAYLOAD0_SIZE;
+}
+#endif
 #endif /* BL32_BASE */
 
 /*******************************************************************************

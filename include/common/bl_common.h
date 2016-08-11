@@ -332,6 +332,8 @@ typedef struct bl31_params {
 	image_info_t *bl31_image_info;
 	entry_point_info_t *bl32_ep_info;
 	image_info_t *bl32_image_info;
+	entry_point_info_t *sfs_payload_ep_info;
+	image_info_t *sfs_payload_image_info;
 	entry_point_info_t *bl33_ep_info;
 	image_info_t *bl33_image_info;
 } bl31_params_t;
