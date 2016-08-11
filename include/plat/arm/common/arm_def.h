@@ -89,7 +89,16 @@
  *   - SCP TZC DRAM: If present, DRAM reserved for SCP use
  *   - AP TZC DRAM: The remaining TZC secured DRAM reserved for AP use
  */
+#ifdef SFSD_mmd
+#define ARM_TZC_DRAM1_SIZE		MAKE_ULL(0x04000000)
+#define ARM_SECURE_NS_DRAM1_SIZE	MAKE_ULL(0x200000)
+#define ARM_SECURE_NS_DRAM1_BASE	(ARM_DRAM1_BASE +		\
+					 ARM_DRAM1_SIZE -		\
+					(ARM_TZC_DRAM1_SIZE +		\
+					 ARM_SECURE_NS_DRAM1_SIZE))
+#else
 #define ARM_TZC_DRAM1_SIZE		MAKE_ULL(0x01000000)
+#endif /* SFSD_mmd */
 
 #define ARM_SCP_TZC_DRAM1_BASE		(ARM_DRAM1_BASE +		\
 					 ARM_DRAM1_SIZE -		\
@@ -106,10 +115,10 @@
 #define ARM_AP_TZC_DRAM1_END		(ARM_AP_TZC_DRAM1_BASE +	\
 					 ARM_AP_TZC_DRAM1_SIZE - 1)
 
-
 #define ARM_NS_DRAM1_BASE		ARM_DRAM1_BASE
 #define ARM_NS_DRAM1_SIZE		(ARM_DRAM1_SIZE -		\
-					 ARM_TZC_DRAM1_SIZE)
+					(ARM_TZC_DRAM1_SIZE + 		\
+					 ARM_SECURE_NS_DRAM1_SIZE))
 #define ARM_NS_DRAM1_END		(ARM_NS_DRAM1_BASE +		\
 					 ARM_NS_DRAM1_SIZE - 1)
 
@@ -169,6 +178,11 @@
  * HACK: This will give S-EL0 access to payload memory even in BL2. We do not
  * care since S-EL0 will not be entered while in BL2.
  */
+#define ARM_MAP_SECURE_NS_DRAM		MAP_REGION_FLAT(			\
+						ARM_SECURE_NS_DRAM1_BASE,	\
+						ARM_SECURE_NS_DRAM1_SIZE,	\
+						MT_MEMORY | MT_EL0_RW | MT_NS)
+
 #define ARM_MAP_SFS_PAYLOAD0_MEM		MAP_REGION_FLAT(		\
 						AP_BL3_SFS_PAYLOAD0_BASE,	\
 						AP_BL3_SFS_PAYLOAD0_SIZE,	\
