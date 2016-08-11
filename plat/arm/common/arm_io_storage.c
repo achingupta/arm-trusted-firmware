@@ -65,6 +65,10 @@ static const io_uuid_spec_t bl32_uuid_spec = {
 	.uuid = UUID_SECURE_PAYLOAD_BL32,
 };
 
+static const io_uuid_spec_t sfs_payload0_uuid_spec = {
+	.uuid = UUID_AP_BL3_SFS_PAYLOAD0,
+};
+
 static const io_uuid_spec_t bl33_uuid_spec = {
 	.uuid = UUID_NON_TRUSTED_FIRMWARE_BL33,
 };
@@ -146,6 +150,11 @@ static const struct plat_io_policy policies[] = {
 	[BL32_IMAGE_ID] = {
 		&fip_dev_handle,
 		(uintptr_t)&bl32_uuid_spec,
+		open_fip
+	},
+	[AP_BL3_SFS_PAYLOAD0_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&sfs_payload0_uuid_spec,
 		open_fip
 	},
 	[BL33_IMAGE_ID] = {
