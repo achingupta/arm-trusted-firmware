@@ -35,6 +35,7 @@
 #include <bl_common.h>
 #include <console.h>
 #include <debug.h>
+#include <errno.h>
 #include <mmio.h>
 #include <plat_arm.h>
 #include <platform.h>
@@ -60,7 +61,9 @@
  */
 static entry_point_info_t bl32_image_ep_info;
 static entry_point_info_t bl33_image_ep_info;
-
+#if AP_BL3_SFS_PAYLOAD0_BASE
+static image_info_t bl32_image_info;
+#endif
 
 /* Weak definitions may be overridden in specific ARM standard platform */
 #pragma weak bl31_early_platform_setup
@@ -197,6 +200,35 @@ void arm_bl31_early_platform_setup(bl31_params_t *from_bl2,
 		bl32_image_ep_info = *from_bl2->bl32_ep_info;
 	bl33_image_ep_info = *from_bl2->bl33_ep_info;
 
+#ifdef AP_BL3_SFS_PAYLOAD0_BASE
+	entry_point_info_t sfs_payload_ep_info;
+
+	/*
+	 * Copy parameters populated by BL2 for entering the SFS Payload
+	 *
+	 * PC   = AP_BL3_SFS_PAYLOAD0_BASE
+	 * SPSR = EL0/Thread mode/Exceptions disabled
+	 * X0   = Hoblist address
+	 * X1   = Stack base address
+	 * X2   = MM memory base address
+	 * X3   = MM memory size
+	 */
+	assert(from_bl2->sfs_payload_ep_info);
+	sfs_payload_ep_info = *from_bl2->sfs_payload_ep_info;
+	INFO("BL31: mm payload ep_info=%p\n", (void *) bl32_image_ep_info.args.arg0);
+	INFO("BL31: mm payload pc=%p\n", (void *) sfs_payload_ep_info.pc);
+	INFO("BL31: mm payload spsr=0x%x\n", sfs_payload_ep_info.spsr);
+	INFO("BL31: mm payload arg0=0x%lx\n", sfs_payload_ep_info.args.arg0);
+
+	/*
+	 * Replace the BL32 entry point information with SFS payload entry point
+	 * information. BL32 is just an exception vector table for trampolining
+	 * from S-EL0 to EL3 and does not need initialisation.
+	 */
+	bl32_image_ep_info = sfs_payload_ep_info;
+	if (from_bl2->bl32_image_info)
+		bl32_image_info = *from_bl2->bl32_image_info;
+#endif /* AP_BL3_SFS_PAYLOAD0_BASE */
 # endif /* LOAD_IMAGE_V2 */
 #endif /* RESET_TO_BL31 */
 }

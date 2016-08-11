@@ -178,6 +178,7 @@ static int load_ap_bl3_sfs_payload(bl31_params_t *bl2_to_bl31_params)
 {
 	int e = 0;
 #ifdef AP_BL3_SFS_PAYLOAD0_BASE
+	#include <pi_spec/standalone_mm_entry/standalone_mm_entry.h>
 	meminfo_t sfs_payload_meminfo;
 
 	INFO("BL2: Loading AP_BL3_SFS_PAYLOAD0\n");
@@ -196,6 +197,10 @@ static int load_ap_bl3_sfs_payload(bl31_params_t *bl2_to_bl31_params)
 	bl2_plat_set_sfs_payload_ep_info(
 		bl2_to_bl31_params->sfs_payload_image_info,
 		bl2_to_bl31_params->sfs_payload_ep_info);
+
+	mm_foundation_entry_prepare(&sfs_payload_meminfo,
+				    bl2_to_bl31_params->sfs_payload_image_info,
+				    bl2_to_bl31_params->sfs_payload_ep_info);
 #endif /* AP_BL3_SFS_PAYLOAD0_BASE */
 	return e;
 }

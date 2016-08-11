@@ -36,7 +36,6 @@
 #include <platform.h>
 #include "bl2_private.h"
 
-
 /*******************************************************************************
  * The only thing to do in BL2 is to load further images and pass control to
  * next BL. The memory occupied by BL2 will be reclaimed by BL3x stages. BL2
