@@ -98,6 +98,13 @@ toc_entry_t toc_entries[] = {
 		.action = 0,
 		.action_arg = NULL
 	},
+	{
+		.name = "Secure Firmware Service AP_BL3_SFS_PAYLOAD0",
+		.uuid = UUID_AP_BL3_SFS_PAYLOAD0,
+		.cmdline_name = "sfs-fw",
+		.action = 0,
+		.action_arg = NULL
+	},
 	/* Key Certificates */
 	{
 		.name = "Root Of Trust key certificate",

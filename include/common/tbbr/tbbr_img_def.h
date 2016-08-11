@@ -78,4 +78,7 @@
 /* Non-Trusted FWU Firmware NS_BL2U */
 #define NS_BL2U_IMAGE_ID		20
 
+/* AP_BL3_ARM_SFS_PAYLOAD0 (Secure Firmware Service) */
+#define AP_BL3_SFS_PAYLOAD0_ID		21
+
 #endif /* __TBBR_IMG_DEF_H__ */
