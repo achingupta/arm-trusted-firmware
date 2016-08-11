@@ -42,6 +42,14 @@
 #define STD_SVC_VERSION_MAJOR		0x0
 #define STD_SVC_VERSION_MINOR		0x1
 
+/* The macros below are used to identify MM calls from the SMC function ID */
+#define MM_FID_MASK			0xffffu
+#define MM_FID_MIN_VALUE		0x40
+#define MM_FID_MAX_VALUE		0x5f
+#define is_mm_fid(_fid)						\
+	((((_fid) & MM_FID_MASK) >= MM_FID_MIN_VALUE) &&	\
+	 (((_fid) & MM_FID_MASK) <= MM_FID_MAX_VALUE))
+
 /*
  * Get the ARM Standard Service argument from EL3 Runtime.
  * This function must be implemented by EL3 Runtime and the

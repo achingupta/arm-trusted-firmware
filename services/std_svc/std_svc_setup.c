@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <cpu_data.h>
 #include <debug.h>
+#include <mmd.h>
 #include <pmf.h>
 #include <psci.h>
 #include <runtime_instr.h>
@@ -48,6 +49,7 @@ DEFINE_SVC_UUID(arm_svc_uid,
 /* Setup Standard Services */
 static int32_t std_svc_setup(void)
 {
+	int32_t rc;
 	uintptr_t svc_arg;
 
 	svc_arg = get_arm_std_svc_args(PSCI_FID_MASK);
@@ -57,7 +59,12 @@ static int32_t std_svc_setup(void)
 	 * PSCI is the only specification implemented as a Standard Service.
 	 * The `psci_setup()` also does EL3 architectural setup.
 	 */
-	return psci_setup((const psci_lib_args_t *)svc_arg);
+	rc = psci_setup((const psci_lib_args_t *)svc_arg);
+	if (rc)
+		return rc;
+
+	/* Initialise the MM Dispatcher */
+	return mmd_setup();
 }
 
 /*
@@ -97,6 +104,15 @@ uintptr_t std_svc_smc_handler(uint32_t smc_fid,
 #endif
 
 		SMC_RET1(handle, ret);
+	}
+
+	/*
+	 * Dispatch MM calls to MMD SMC handler and return its return
+	 * value
+	 */
+	if (is_mm_fid(smc_fid)) {
+		return mmd_smc_handler(smc_fid, x1, x2, x3, x4, cookie,
+				       handle, flags);
 	}
 
 	switch (smc_fid) {
