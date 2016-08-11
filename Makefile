@@ -58,6 +58,8 @@ PLAT				:= ${DEFAULT_PLAT}
 SPD				:= none
 # The AArch32 Secure Payload to be built as BL32 image
 AARCH32_SP			:= none
+# SFSD choice
+SFSD				:= none
 # Base commit to perform code check on
 BASE_COMMIT			:= origin/master
 # NS timer register save and restore
@@ -266,7 +268,8 @@ INCLUDES		+=	-Iinclude/bl1				\
 				-Iinclude/plat/common			\
 				-Iinclude/services			\
 				${PLAT_INCLUDES}			\
-				${SPD_INCLUDES}
+				${SPD_INCLUDES}				\
+				${SFSD_INCLUDES}
 
 
 ################################################################################
@@ -279,6 +282,7 @@ BUILD_BASE		:=	./build
 BUILD_PLAT		:=	${BUILD_BASE}/${PLAT}/${BUILD_TYPE}
 
 SPDS			:=	$(sort $(filter-out none, $(patsubst services/spd/%,%,$(wildcard services/spd/*))))
+SFSDS			:=	$(sort $(filter-out none, $(patsubst services/std_svc/sfsd/%,%,$(wildcard services/std_svc/sfsd/*))))
 
 # Platforms providing their own TBB makefile may override this value
 INCLUDE_TBBR_MK		:=	1
@@ -314,6 +318,25 @@ endif
         #   that will be included in the FIP
         # If both BL32_SOURCES and BL32 are defined, the binary takes precedence
         # over the sources.
+endif
+
+################################################################################
+# Include SPD Makefile if one has been specified
+################################################################################
+
+ifneq (${SFSD},none)
+ifdef EL3_PAYLOAD_BASE
+        $(warning "SFSD and EL3_PAYLOAD_BASE are incompatible build options.")
+        $(warning "The SFSD and its SFS_PAYLOAD companion will be present but ignored.")
+endif
+        # We expect to locate an spd.mk under the specified SFSD directory
+        SFSD_MAKE	:=	$(wildcard services/std_svc/sfsd/${SFSD}/${SFSD}.mk)
+
+        ifeq (${SFSD_MAKE},)
+                $(error Error: No services/std_svc/sfsd/${SFSD}/${SFSD}.mk located)
+        endif
+        $(info Including ${SFSD_MAKE})
+        include ${SFSD_MAKE}
 endif
 
 
@@ -483,6 +506,7 @@ $(eval $(call assert_boolean,ENABLE_RUNTIME_INSTRUMENTATION))
 
 $(eval $(call add_define,PLAT_${PLAT}))
 $(eval $(call add_define,SPD_${SPD}))
+$(eval $(call add_define,SFSD_${SFSD}))
 $(eval $(call add_define,NS_TIMER_SWITCH))
 $(eval $(call add_define,RESET_TO_BL31))
 $(eval $(call add_define,CTX_INCLUDE_FPREGS))
@@ -600,7 +624,7 @@ $(if ${BL2}, $(eval $(call MAKE_TOOL_ARGS,2,${BL2},tb-fw)),\
 endif
 
 ifeq (${NEED_BL31},yes)
-BL31_SOURCES += ${SPD_SOURCES}
+BL31_SOURCES += ${SPD_SOURCES} ${SFSD_SOURCES}
 $(if ${BL31}, $(eval $(call MAKE_TOOL_ARGS,31,${BL31},soc-fw)),\
 	$(eval $(call MAKE_BL,31,soc-fw)))
 endif
