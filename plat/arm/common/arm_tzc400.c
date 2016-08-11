@@ -67,6 +67,11 @@ void arm_tzc400_setup(void)
 			TZC_REGION_S_RDWR,
 			0);
 
+	INFO("Configuring NS memory - 0x%llx, 0x%llx, 0x%llx bytes \n",
+	     ARM_NS_DRAM1_BASE,
+	     ARM_NS_DRAM1_END + ARM_SECURE_NS_DRAM1_SIZE,
+	     ARM_SECURE_NS_DRAM1_SIZE);
+
 	/* Region 2 set to cover Non-Secure access to 1st DRAM address range.
 	 * Apply the same configuration to given filters in the TZC. */
 	tzc400_configure_region(PLAT_ARM_TZC_FILTERS, 2,

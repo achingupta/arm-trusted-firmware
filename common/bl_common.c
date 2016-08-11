@@ -432,6 +432,9 @@ int load_image(meminfo_t *mem_layout,
 		goto exit;
 	}
 
+	INFO("Size of image id=%u at address %p is 0x%x\n", image_id,
+	     (void *) image_base, (unsigned int) image_size);
+
 	/* Check that the memory where the image will be loaded is free */
 	if (!is_mem_free(mem_layout->free_base, mem_layout->free_size,
 			 image_base, image_size)) {
