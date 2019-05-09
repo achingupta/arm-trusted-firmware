@@ -11,6 +11,8 @@
 #include <common/bl_common.h>
 #include <common/debug.h>
 #include <drivers/console.h>
+#include <libfdt.h>
+#include <common/fdt_wrappers.h>
 #include <lib/extensions/ras.h>
 #include <lib/mmio.h>
 #include <lib/utils.h>
@@ -56,6 +58,55 @@ IMPORT_SYM(unsigned long, __INIT_CODE_END__, BL_INIT_CODE_END);
 					MT_CODE | MT_SECURE)
 #endif
 
+bool sel2_supported(void)
+{
+	uint64_t features;
+
+	features = read_id_aa64pfr0_el1() >> ID_AA64PFR0_SEL2_SHIFT;
+	return (features & ID_AA64PFR0_SEL2_MASK) == 1U;
+}
+
+static void __init arm_bl31_soc_fw_config_parse(const void *fdt)
+{
+	int rc, root_node, node;
+	uint32_t enable_sel2;
+	char *str;
+
+	assert (fdt != NULL);
+
+	rc = fdt_check_header(fdt);
+	if (rc != 0) {
+		ERROR("Wrong format for SoC FW blob (%d).\n", rc);
+		panic();
+	}
+
+	root_node = fdt_node_offset_by_compatible(fdt, -1, "arm,soc_fw");
+	if (root_node < 0) {
+		ERROR("Unrecognized SoC FW blob (%d)\n", rc);
+		panic();
+	}
+
+	str = "arch_config";
+	node = fdt_subnode_offset_namelen(fdt, root_node, str, strlen(str));
+	if (node < 0) {
+		ERROR("Root node doesn't contain subnode '%s'\n", str);
+		panic();
+	}
+
+	rc = fdtw_read_cells(fdt, node, "enable_sel2", 1, &enable_sel2);
+	if (rc != 0)
+		return;
+
+	/* Enable SEL2 is the SoC supports it and its configuration says so */
+	if (enable_sel2) {
+		if (sel2_supported()) {
+			write_scr_el3(read_scr_el3() | SCR_EEL2_BIT);
+			INFO("Enabled SEL2 \n");
+		} else {
+			WARN("SEL2 enable request but not supported \n");
+		}
+	}
+}
 /*******************************************************************************
  * Return a pointer to the 'entry_point_info' structure of the next image for the
  * security state specified. BL33 corresponds to the non-secure image type
@@ -172,6 +223,10 @@ void __init arm_bl31_early_platform_setup(void *from_bl2, uintptr_t soc_fw_confi
 
 	if (bl33_image_ep_info.pc == 0U)
 		panic();
+
+	/* Parse SoC configuration */
+	arm_bl31_soc_fw_config_parse((const void *) soc_fw_config);
+
 #endif /* RESET_TO_BL31 */
 }
 

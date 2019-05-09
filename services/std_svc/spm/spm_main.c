@@ -504,6 +504,18 @@ int32_t spm_setup(void)
 	uintptr_t rd_base_align;
 	uintptr_t rd_size_align;
 	uint32_t ep_attr;
+	uint32_t sel2_enabled, mode = MODE_EL1;
+
+	/*
+	 * Check if SEL2 has been enabled. In this case, this SPM will only
+	 * dispatch SPCI requests to the SPM in SEL2.
+	 *
+	 * TODO: Only a jump into SEL2 is supported right now. Do the rest
+	 * later.
+	 */
+	sel2_enabled = read_scr_el3() & SCR_EEL2_BIT;
+	if (sel2_enabled)
+		mode = MODE_EL2;
 
 	sp_ep_info = bl31_plat_get_next_image_ep_info(SECURE);
 	if (!sp_ep_info) {
@@ -581,8 +593,8 @@ int32_t spm_setup(void)
 	if (read_sctlr_el3() & SCTLR_EE_BIT)
 		ep_attr |= EP_EE_BIG;
 	SET_PARAM_HEAD(sp_ep_info, PARAM_EP, VERSION_1, ep_attr);
-	assert (sp_ep_info->pc = BL32_BASE);
-	sp_ep_info->spsr = SPSR_64(MODE_EL1, MODE_SP_ELX,
+	assert (sp_ep_info->pc == BL32_BASE);
+	sp_ep_info->spsr = SPSR_64(mode, MODE_SP_ELX,
 				   DISABLE_ALL_EXCEPTIONS);
 
 	zeromem(&sp_ep_info->args, sizeof(sp_ep_info->args));

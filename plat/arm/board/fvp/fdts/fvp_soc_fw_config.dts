@@ -7,5 +7,9 @@
 /dts-v1/;
 
 / {
+	compatible = "arm,soc_fw";
 
+	arch_config {
+		enable_sel2 = <0x1>;
+	};
 };

@@ -143,6 +143,11 @@
 #define ID_AA64PFR0_CSV2_MASK	ULL(0xf)
 #define ID_AA64PFR0_CSV2_LENGTH	U(4)
 
+/* ID_AA64DFR0_EL1.SEL2 definitions (for ARMv8.4+) */
+#define ID_AA64PFR0_SEL2_SHIFT	U(36)
+#define ID_AA64PFR0_SEL2_MASK	ULL(0xf)
+#define ID_AA64PFR0_SEL2_LENGTH	U(4)
+
 /* ID_AA64DFR0_EL1.PMS definitions (for ARMv8.2+) */
 #define ID_AA64DFR0_PMS_SHIFT	U(32)
 #define ID_AA64DFR0_PMS_LENGTH	U(4)
@@ -269,6 +274,7 @@
 /* SCR definitions */
 #define SCR_RES1_BITS		((U(1) << 4) | (U(1) << 5))
 #define SCR_FIEN_BIT		(U(1) << 21)
+#define SCR_EEL2_BIT		(U(1) << 18)
 #define SCR_API_BIT		(U(1) << 17)
 #define SCR_APK_BIT		(U(1) << 16)
 #define SCR_TWE_BIT		(U(1) << 13)
