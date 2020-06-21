@@ -301,8 +301,8 @@ uint64_t spm_mm_smc_handler(uint32_t smc_fid,
 		case FFA_VERSION:
 			SMC_RET1(handle, FFA_VERSION_COMPILED);
 
-		case MM_SP_EVENT_COMPLETE_AARCH64:
-			spm_sp_synchronous_exit(x1);
+		case FFA_MSG_SEND_DIRECT_RESP_SMC64:
+			spm_sp_synchronous_exit(x4);
 
 		case MM_SP_MEMORY_ATTRIBUTES_GET_AARCH64:
 			INFO("Received MM_SP_MEMORY_ATTRIBUTES_GET_AARCH64 SMC\n");
