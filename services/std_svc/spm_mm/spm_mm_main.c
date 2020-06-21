@@ -12,6 +12,7 @@
 #include <bl31/ehf.h>
 #include <common/debug.h>
 #include <common/runtime_svc.h>
+#include <services/ffa_svc.h>
 #include <lib/el3_runtime/context_mgmt.h>
 #include <lib/smccc.h>
 #include <lib/spinlock.h>
