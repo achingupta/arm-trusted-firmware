@@ -298,8 +298,8 @@ uint64_t spm_mm_smc_handler(uint32_t smc_fid,
 
 		switch (smc_fid) {
 
-		case SPM_MM_VERSION_AARCH32:
-			SMC_RET1(handle, SPM_MM_VERSION_COMPILED);
+		case FFA_VERSION:
+			SMC_RET1(handle, FFA_VERSION_COMPILED);
 
 		case MM_SP_EVENT_COMPLETE_AARCH64:
 			spm_sp_synchronous_exit(x1);
