@@ -196,10 +196,13 @@ uint64_t spm_mm_sp_call(uint32_t smc_fid, uint64_t x1, uint64_t x2, uint64_t x3)
 	/* Set values for registers on SP entry */
 	cpu_context_t *cpu_ctx = &(sp_ptr->cpu_ctx);
 
-	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X0, smc_fid);
-	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X1, x1);
-	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X2, x2);
-	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X3, x3);
+	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X0, FFA_MSG_SEND_DIRECT_REQ_SMC64);
+	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X1, 0);
+	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X2, 0);
+	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X3, smc_fid);
+	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X4, x1);
+	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X5, x2);
+	write_ctx_reg(get_gpregs_ctx(cpu_ctx), CTX_GPREG_X6, x3);
 
 	/* Jump to the Secure Partition. */
 	rc = spm_sp_synchronous_entry(sp_ptr);
